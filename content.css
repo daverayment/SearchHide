@@ -1,0 +1,16 @@
+.hidden {
+    display: none;
+}
+
+.unhidden {
+    background-color: antiquewhite;
+}
+
+.hide-link {
+    text-decoration: underline;
+    font-weight: bold;
+    color: darkblue;
+    background-color: antiquewhite;
+    padding: 5pt 10pt 5pt 10pt;
+    border-radius: 5px;
+}

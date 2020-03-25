@@ -1,0 +1,34 @@
+- Add to github
+- Hide result immediately when clicking on link (rescan whole page as there may be multiple instances of the same hostname)
+- Don't add to hidden sites if it already exists (DONE)
+- Options page
+    - Styles and add header
+    - Edit sites directly (DONE)
+    - Choose which search engines are supported
+    - Sync with storage (DONE)
+    - Embedded options don't work on Opera?
+            "options_ui": {
+                "page": "options.html",
+                "open_in_tab": false
+            }
+- Duck Duck Go
+    - Rescan page when user is using paged results and they click 'More Results' button.
+- Extension icons
+    - List graphic with cross?
+- Make compatible with more search engines:
+    - Bing
+    - Google
+    - Yahoo!
+    - Baidu
+    - Ask
+    - Yandex
+    - Wiki.com
+    - Twitter
+    - Search Encrypt
+    - Swisscows
+    - BoardReader
+    - Dogpile
+    - Yippy
+    - Google Scholar
+- Icon or text to show/hide results?
+    - Make option

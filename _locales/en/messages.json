@@ -1,0 +1,22 @@
+{
+    "extName": {
+        "message": "Search Hide",
+        "description": "Extension name."
+    },
+    "extDescription": {
+        "message": "Hide certain sites in search results.",
+        "description": "Extension description."
+    },
+    "hidePrompt": {
+        "message": "Hide site from search results",
+        "description": "User prompt to hide a search result."
+    },
+    "hidePromptTitle": {
+        "message": "Hide site",
+        "description": "Hover text for the hide prompt."
+    },
+    "resultHidden": {
+        "message": "Result hidden",
+        "description": "Shown in place of the hidden search result."
+    }
+}
