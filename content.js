@@ -4,10 +4,12 @@
 // TODO: make generic
 /**
  * Returns an HTMLCollectionOf<Element> representing the individual search
- * page elements which require processing.
+ * page elements which require processing, i.e. those which have not already
+ * been hidden.
  */
 function getResultElements() {
-    return document.getElementsByClassName("result__body links_main");
+    return Array.from(document.getElementsByClassName("result__body links_main"))
+        .filter((element) => !element.classList.contains("hidden"));
 }
 
 // TODO: make generic
@@ -40,42 +42,53 @@ async function waitForElements() {
     return getResultElements();
 }
 
-waitForElements()
-    .then((results) => {
-        const resultElements = results;
+/**
+ * Replace a result with 'Result hidden' text.
+ * @param {Element} result - The result element.
+ */
+function hideResult(result) {
+    const noteDiv = document.createElement("div");
+    noteDiv.innerHTML = chrome.i18n.getMessage("resultHidden") +
+        ` (${new URL(getLinkFromResult(result)).hostname})`;
+    noteDiv.setAttribute('data-resultid', result.id);
+    noteDiv.classList.add('hide-link');
+    // When the 'Result hidden' text is clicked, unhide the
+    // result.
+    noteDiv.addEventListener("click", function(ev) {
+        const target = ev.currentTarget.parentElement.getElementsByClassName("result__body links_main")[0];
+        target.classList.remove("hidden");
+        target.classList.add("unhidden");
+        ev.currentTarget.remove();
+        ev.stopPropagation();
+    });
+    result.parentElement.prepend(noteDiv);
+    result.classList.add("hidden");
+}
 
-        // Get the user's preferences from storage
-        chrome.storage.sync.get(["hidden_sites"], (stored) => {
-            for (const result of resultElements) {
-                const link = getLinkFromResult(result);
-                if (shouldHide(link, stored.hidden_sites)) {
-                    // Replace the result with 'Result hidden' text.
-                    const noteDiv = document.createElement("div");
-                    noteDiv.innerHTML = chrome.i18n.getMessage("resultHidden") +
-                        ` (${new URL(link).hostname})`;
-                    noteDiv.setAttribute('data-resultid', result.id);
-                    noteDiv.classList.add('hide-link');
-                    // When the 'Result hidden' text is clicked, unhide the
-                    // result.
-                    noteDiv.addEventListener("click", function(ev) {
-                        const target = ev.currentTarget.parentElement.getElementsByClassName("result__body links_main")[0];
-                        target.classList.remove("hidden");
-                        target.classList.add("unhidden");
-                        ev.currentTarget.remove();
-                        ev.stopPropagation();
-                    });
-                    result.parentElement.prepend(noteDiv);
-                    result.classList.add("hidden");
+function processSearchPage() {
+    waitForElements()
+        .then((results) => {
+            const resultElements = results;
+
+            // Get the user's preferences from storage
+            chrome.storage.sync.get(["hidden_sites"], (stored) => {
+                for (const result of resultElements) {
+                    const link = getLinkFromResult(result);
+                    if (shouldHide(link, stored.hidden_sites)) {
+                        hideResult(result);
+                    }
+                    else {
+                        result.classList.remove("hidden");
+                    }
+                    addLink(result);
                 }
-                else {
-                    result.classList.remove("hidden");
-                }
-                addLink(result);
-            }
+            })
         })
-    })
-    .catch(reason => console.error(reason)
-);
+        .catch(reason => console.error(reason)
+    );
+}
+
+processSearchPage();
 
 /**
  * Add our 'Hide' link to a specific search result.
@@ -91,6 +104,7 @@ function addLink(result) {
         return;
     }
     a.setAttribute("data-link", result_hrefs[0].href.toString());
+    // When the user clicks on the link, add to the list of hidden sites.
     a.addEventListener("click", function(mouse_event) {
         chrome.storage.sync.get(["hidden_sites"], (result) => {
             let hiddenSites = result.hidden_sites;
@@ -111,14 +125,16 @@ function addLink(result) {
     result.appendChild(a);
 }
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
-    for (var key in changes) {
-        var storageChange = changes[key];
-        console.log('Storage key "%s" in namespace "%s" changed. ' +
-                    'Old value was "%s", new value is "%s".',
-                    key,
-                    namespace,
-                    storageChange.oldValue,
-                    storageChange.newValue);
+/**
+ * When the hidden sites list is altered, process the page again.
+ */
+chrome.storage.onChanged.addListener((changes) => {
+    if (changes.hidden_sites !== undefined &&
+        changes.hidden_sites.newValue !== undefined) {
+        changes.hidden_sites.newValue.forEach((site) => {
+            console.log(site);
+        });
     }
+
+    processSearchPage();
 });
