@@ -80,7 +80,10 @@ function processSearchPage() {
                     else {
                         result.classList.remove("hidden");
                     }
-                    addLink(result);
+                    // Add the link if it is not present already
+                    if (result.lastChild.text !== chrome.i18n.getMessage("hidePrompt")) {
+                        addLink(result);
+                    }
                 }
             })
         })
