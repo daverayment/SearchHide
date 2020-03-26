@@ -1,6 +1,7 @@
 - Add to github (DONE)
 - Hide result immediately when clicking on link (rescan whole page as there may be multiple instances of the same hostname) (DONE)
 - Don't add to hidden sites if it already exists (DONE)
+- When hidden, change 'Hide site from search results' link to 'Show site in search results again', which takes the site out of the hidden list
 - Options page
     - Styles and add header
     - Edit sites directly (DONE)
