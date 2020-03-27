@@ -3,10 +3,11 @@
 }
 
 .unhidden {
-    background-color: antiquewhite;
+    background-color: antiquewhite !important;
 }
 
 .hide-link {
+    cursor: pointer;
     text-decoration: underline;
     font-weight: bold;
     color: darkblue;

@@ -1,25 +1,82 @@
 "use strict";
 /* global chrome */
 
-// TODO: make generic
+const SearchProvider = {
+    "DuckDuckGo": {
+        "ResultClass": "result__body links_main",
+        "ResultElements": function() {
+            return document.getElementsByClassName(this.ResultClass);
+        },
+        "Link": function(resultElement) {
+            const resultHrefs = resultElement.getElementsByClassName("result__a");
+            return resultHrefs.length === 0 ? "" : resultHrefs[0].href.toString();
+        }
+    },
+    "Bing": {
+        "ResultClass": "b_algo",
+        "ResultElements": function() {
+            return document.getElementsByClassName(this.ResultClass);
+        },
+        "Link": function(resultElement) {
+            const linkElements = resultElement.getElementsByTagName("a");
+            return linkElements.length > 0 ? linkElements[0].href : "";
+        }
+    },
+    "Google": {
+        "ResultClass": "rc",
+        "ResultElements": function() {
+            return document.getElementsByClassName("rc");
+        },
+        "Link": function(resultElement) {
+            const resultLinks = resultElement.getElementsByTagName("a");
+            return resultLinks.length === 0 ? "": resultLinks[0].origin;
+        }
+    },
+    "Unknown": {
+        "ResultClass": "",
+        "ResultElements": function() { return []; },
+        "Link": function() { return ""; }
+    }
+}
+
+let searchProvider = SearchProvider.Unknown;
+
+/**
+ * Which search page is the user visiting?
+ */
+function determineSearchProvider() {
+    const hostname = document.domain;
+
+    if (hostname.startsWith("duckduckgo.")) {
+        searchProvider = SearchProvider.DuckDuckGo;
+    }
+    else if (hostname.includes(".bing.")) {
+        searchProvider = SearchProvider.Bing;
+    }
+    else if(hostname.includes(".google.")) {
+        searchProvider = SearchProvider.Google;
+    }
+}
+
 /**
  * Returns an HTMLCollectionOf<Element> representing the individual search
  * page elements which require processing, i.e. those which have not already
  * been hidden.
  */
 function getResultElements() {
-    return Array.from(document.getElementsByClassName("result__body links_main"))
+    return Array.from(searchProvider.ResultElements())
         .filter((element) => !element.classList.contains("hidden"));
+
+    // return Array.from(document.getElementsByClassName(searchProvider.ResultClassName))
+    //     .filter((element) => !element.classList.contains("hidden"));
 }
 
-// TODO: make generic
 /**
  * Locate and extract the HREF from a single search page result.
  * @param {Element} resultElement - The search page result element.
  */
 function getLinkFromResult(resultElement) {
-    const resultHrefs = resultElement.getElementsByClassName("result__a");
-    return resultHrefs.length === 0 ? "" : resultHrefs[0].href.toString();
+    return searchProvider.Link(resultElement);
 }
 
 /**
@@ -50,18 +107,26 @@ function hideResult(result) {
     const noteDiv = document.createElement("div");
     noteDiv.innerHTML = chrome.i18n.getMessage("resultHidden") +
         ` (${new URL(getLinkFromResult(result)).hostname})`;
-    noteDiv.setAttribute('data-resultid', result.id);
     noteDiv.classList.add('hide-link');
     // When the 'Result hidden' text is clicked, unhide the
     // result.
     noteDiv.addEventListener("click", function(ev) {
-        const target = ev.currentTarget.parentElement.getElementsByClassName("result__body links_main")[0];
+        // TODO: messy
+        const target = Object.is(searchProvider, SearchProvider.Bing) ?
+            ev.target.nextElementSibling :
+            ev.target.parentElement.getElementsByClassName(searchProvider.ResultClass)[0];
         target.classList.remove("hidden");
         target.classList.add("unhidden");
         ev.currentTarget.remove();
         ev.stopPropagation();
     });
-    result.parentElement.prepend(noteDiv);
+    // TODO: messy
+    if (Object.is(searchProvider, SearchProvider.Bing)) {
+        result.parentElement.insertBefore(noteDiv, result);
+    }
+    else {
+        result.parentElement.prepend(noteDiv);
+    }
     result.classList.add("hidden");
 }
 
@@ -81,7 +146,8 @@ function processSearchPage() {
                         result.classList.remove("hidden");
                     }
                     // Add the link if it is not present already
-                    if (result.lastChild.text !== chrome.i18n.getMessage("hidePrompt")) {
+                    if (result.lastChild.text === undefined ||
+                        result.lastChild.text !== chrome.i18n.getMessage("hidePrompt")) {
                         addLink(result);
                     }
                 }
@@ -91,6 +157,7 @@ function processSearchPage() {
     );
 }
 
+determineSearchProvider();
 processSearchPage();
 
 /**
@@ -102,11 +169,11 @@ function addLink(result) {
     a.appendChild(document.createTextNode(chrome.i18n.getMessage("hidePrompt")));
     a.title = chrome.i18n.getMessage("hidePromptTitle");
     a.href = "javascript:;";
-    const result_hrefs = result.getElementsByClassName("result__a");
-    if (result_hrefs.length === 0) {
+    const resultLink = searchProvider.Link(result);
+    if (resultLink.length === 0) {
         return;
     }
-    a.setAttribute("data-link", result_hrefs[0].href.toString());
+    a.setAttribute("data-link", resultLink);
     // When the user clicks on the link, add to the list of hidden sites.
     a.addEventListener("click", function(mouse_event) {
         chrome.storage.sync.get(["hidden_sites"], (result) => {
