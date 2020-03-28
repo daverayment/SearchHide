@@ -2,6 +2,10 @@
 - Hide result immediately when clicking on link (rescan whole page as there may be multiple instances of the same hostname) (DONE)
 - Don't add to hidden sites if it already exists (DONE)
 - When hidden, change 'Hide site from search results' link to 'Show site in search results again', which takes the site out of the hidden list
+- Finish commenting
+- Search Providers:
+    - Constructor for search providers (REJECTED)
+    - Defaults for some properties (DONE)
 - Bing issues:
     - Spacing needed around Result hidden div.
     - Unhidden results are not styled correctly (DONE)
@@ -22,7 +26,7 @@
 - Make compatible with more search engines:
     - Bing (DONE)
     - Google (DONE)
-    - Yahoo!
+    - Yahoo! (DONE)
     - Baidu
     - Ask
     - Yandex
