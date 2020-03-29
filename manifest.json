@@ -14,12 +14,16 @@
                 "https://*.search.yahoo.com/search?p=*"
             ],
             "run_at": "document_idle",
-            "js": [
-                "content.js"
-            ],
-            "css": [
-                "content.css"
-            ]
+            "js": ["content.js"],
+            "css": ["content.css"]
+        },
+        {
+            "matches": ["https://*.search.yahoo.com/search?p=*"],
+            "css": ["site_specific_css/yahoo.css"]
+        },
+        {
+            "matches": ["https://www.bing.com/search?q=*"],
+            "css": ["site_specific_css/bing.css"]
         }
     ],
     "icons": {

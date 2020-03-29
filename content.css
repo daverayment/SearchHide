@@ -6,7 +6,11 @@
     background-color: antiquewhite !important;
 }
 
-.hide-link {
+.hide-result-link {
+    font-size: small !important;
+}
+
+.result-hidden {
     cursor: pointer;
     text-decoration: underline;
     font-weight: bold;
