@@ -1,58 +1,55 @@
 "use strict";
 /* global chrome */
 
-function Provider(name, resultClass) {
-    this.name = name;
-    this.resultClass = resultClass;
-}
-
-/**
- * Returns an HTMLCollectionOf<Element> representing the individual search
- * page elements which require processing, i.e. those which have not already
- * been hidden.
- */
-Provider.prototype.getResultElements = function () {
-    return Array.from(document.getElementsByClassName(this.resultClass))
-        .filter((element) => !element.classList.contains("hidden"));
-};
-
-/**
- * Locate and extract the HREF from a single search page result.
- * @param {Element} resultElement - The search page result element.
- * @param {string} [linkClass] - The link element's class. If present, this will be used instead of just looking for anchor tags.
- * @returns {string} - The URL, or "" if not found.
- */
-Provider.prototype.getLinkFromResultElement = (resultElement, linkClass) => {
-    let resultHrefs = undefined;
-    if (typeof(linkClass) === "undefined") {
-        resultHrefs = resultElement.getElementsByTagName("a");
+class Provider {
+    constructor(name, resultClass) {
+        this.name = name;
+        this.resultClass = resultClass;
     }
-    else {
-        resultHrefs = resultElement.getElementsByClassName(linkClass);
+    /**
+     * Returns an HTMLCollectionOf<Element> representing the individual search
+     * page elements which require processing, i.e. those which have not already
+     * been hidden.
+     */
+    getResultElements() {
+        return Array.from(document.getElementsByClassName(this.resultClass))
+            .filter((element) => !element.classList.contains("hidden"));
     }
-    return resultHrefs.length === 0 ? "" : resultHrefs[0].href.toString();
-};
-
-Provider.prototype.getResultFromHideLink = function (linkElement) {
-    const result = linkElement.parentElement.getElementsByClassName(this.resultClass)[0];
-    return result;
-}
-
-/**
- * Replace a result with 'Result hidden' text.
- * @param {Element} result - The result element.
- */
-Provider.prototype.hideResult = (result) => {
-    const noteDiv = createResultHiddenElement(result);
-
-    // TODO: messy
-    if (this.name === "Bing") {
-        result.parentElement.insertBefore(noteDiv, result);
+    /**
+     * Locate and extract the HREF from a single search page result.
+     * @param {Element} resultElement - The search page result element.
+     * @param {string} [linkClass] - The link element's class. If present, this will be used instead of just looking for anchor tags.
+     * @returns {string} - The URL, or "" if not found.
+     */
+    getLinkFromResultElement(resultElement, linkClass) {
+        let resultHrefs = undefined;
+        if (typeof (linkClass) === "undefined") {
+            resultHrefs = resultElement.getElementsByTagName("a");
+        }
+        else {
+            resultHrefs = resultElement.getElementsByClassName(linkClass);
+        }
+        return resultHrefs.length === 0 ? "" : resultHrefs[0].href.toString();
     }
-    else {
-        result.parentElement.prepend(noteDiv);
+    getResultFromHideLink(linkElement) {
+        const result = linkElement.parentElement.getElementsByClassName(this.resultClass)[0];
+        return result;
     }
-    result.classList.add("hidden");
+    /**
+     * Replace a result with 'Result hidden' text.
+     * @param {Element} result - The result element.
+     */
+    hideResult(result) {
+        const noteDiv = createResultHiddenElement(result);
+        // TODO: messy
+        if (this.name === "Bing") {
+            result.parentElement.insertBefore(noteDiv, result);
+        }
+        else {
+            result.parentElement.prepend(noteDiv);
+        }
+        result.classList.add("hidden");
+    }
 }
 
 let searchProvider = function () {
