@@ -36,7 +36,13 @@ class Provider {
      * @param {Element} linkElement - The 'Hide result' link.
      */
     getResultFromHideLink(linkElement) {
-        const result = linkElement.parentElement.getElementsByClassName(this.resultClass)[0];
+        let result = undefined;
+        if (this.name === "Bing" || this.name === "Yahoo") {
+            result = linkElement.nextElementSibling;
+        }
+        else {
+            result = linkElement.parentElement.getElementsByClassName(this.resultClass)[0];
+        }
         return result;
     }
     /**
@@ -46,7 +52,7 @@ class Provider {
     hideResult(result) {
         const noteDiv = this.createResultHiddenElement(result);
         // TODO: messy
-        if (this.name === "Bing") {
+        if (this.name === "Bing" || this.name === "Yahoo") {
             result.parentElement.insertBefore(noteDiv, result);
         }
         else {
@@ -65,7 +71,7 @@ class Provider {
         noteDiv.classList.add('result-hidden');
         // When the 'Result hidden' text is clicked, unhide the
         // result.
-        noteDiv.addEventListener("click", this.unhideResult);
+        noteDiv.addEventListener("click", ev => this.unhideResult(ev));
         return noteDiv;
     }
     /**
@@ -73,7 +79,7 @@ class Provider {
      * @param {Event} ev - The mouse click event trigger.
      */
     unhideResult(ev) {
-        const resultElement = searchProvider.getResultFromHideLink(ev.target);
+        const resultElement = this.getResultFromHideLink(ev.target);
         resultElement.classList.remove("hidden");
         resultElement.classList.add("unhidden");
         ev.currentTarget.remove();
@@ -127,11 +133,12 @@ let searchProvider = function () {
     else if (hostname.includes(".google.")) {
         return new Provider("Google", "rc");
     }
-    else if(hostname.includes("search.yahoo.com")) {
+    else if (hostname.includes("search.yahoo.com")) {
         let p = new Provider("Yahoo", "algo-sr");
         p.getResultElements = () => {
             return Array.from(document.querySelectorAll("div.algo-sr"))
-                .map(x => x.parentElement);
+                .map(x => x.parentElement)
+                .filter(x => !x.classList.contains("hidden"));
         }
         return p;
     }
