@@ -7,7 +7,7 @@
     - Constructor for search providers (REJECTED)
     - Defaults for some properties (DONE)
 - Bing issues:
-    - Spacing needed around Result hidden div.
+    - Spacing needed around Result hidden div. (DONE)
     - Unhidden results are not styled correctly (DONE)
 - Options page
     - Styles and add header
@@ -28,7 +28,7 @@
     - Google (DONE)
     - Yahoo! (DONE)
     - Baidu
-    - Ask
+    - Ask (DONE)
     - Yandex
     - Wiki.com
     - Twitter

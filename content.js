@@ -52,7 +52,7 @@ class Provider {
     hideResult(result) {
         const noteDiv = this.createResultHiddenElement(result);
         // TODO: messy
-        if (this.name === "Bing" || this.name === "Yahoo") {
+        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "Ask.com") {
             result.parentElement.insertBefore(noteDiv, result);
         }
         else {
@@ -142,6 +142,21 @@ let searchProvider = function () {
         }
         return p;
     }
+    else if (hostname.includes(".ask.com")) {
+        return new Provider("Ask.com", "PartialSearchResults-item");
+    }
+    // else if (hostname.includes(".baidu.com")) {
+    //     let p = new Provider("Baidu", "result c-container");
+    //     p.getLinkFromResultElement = (result) => {
+    //         let hrefs = Array.from(result.getElementsByTagName("a"))
+    //             .filter(x => x.classList.contains("c-showurl"))
+    //             .map(x => x.innerText);
+    //         if (hrefs.length > 0) {
+    //             return new URL(hrefs[0].trim()).href.toString();
+    //         }
+    //     }
+    //     return p;
+    // }
     else {
         return new Provider("Unknown", "");
     }
@@ -169,31 +184,32 @@ async function waitForElements() {
     return searchProvider.getResultElements();
 }
 
+function processResults(results) {
+    const resultElements = results;
+
+    // Get the user's preferences from storage
+    chrome.storage.sync.get(["hidden_sites"], (stored) => {
+        for (const result of resultElements) {
+            const link = searchProvider.getLinkFromResultElement(result);
+            if (shouldHide(link, stored.hidden_sites)) {
+                searchProvider.hideResult(result);
+            }
+            else {
+                result.classList.remove("hidden");
+            }
+            // Add the link if it is not present already
+            if (result.lastChild.text === undefined ||
+                result.lastChild.text !== chrome.i18n.getMessage("hidePrompt")) {
+                searchProvider.addLink(result);
+            }
+        }
+    })
+}
+
 function processSearchPage() {
     waitForElements()
-        .then((results) => {
-            const resultElements = results;
-
-            // Get the user's preferences from storage
-            chrome.storage.sync.get(["hidden_sites"], (stored) => {
-                for (const result of resultElements) {
-                    const link = searchProvider.getLinkFromResultElement(result);
-                    if (shouldHide(link, stored.hidden_sites)) {
-                        searchProvider.hideResult(result);
-                    }
-                    else {
-                        result.classList.remove("hidden");
-                    }
-                    // Add the link if it is not present already
-                    if (result.lastChild.text === undefined ||
-                        result.lastChild.text !== chrome.i18n.getMessage("hidePrompt")) {
-                        searchProvider.addLink(result);
-                    }
-                }
-            })
-        })
-        .catch(reason => console.error(reason)
-    );
+        .then(results => processResults(results))
+        .catch(reason => console.error(reason));
 }
 
 /**
@@ -208,6 +224,19 @@ chrome.storage.onChanged.addListener((changes) => {
     }
 
     processSearchPage();
+});
+
+var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        console.log(mutation.type);
+    });
+    processSearchPage(); 
+});
+
+// TODO: only for Duck Duck Go?
+observer.observe(document.querySelector("div.results--main"), {
+    subtree: true,
+    childList: true
 });
 
 processSearchPage();

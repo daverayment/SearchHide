@@ -11,8 +11,10 @@
                 "https://duckduckgo.com/?q=*",
                 "https://www.bing.com/search?q=*",
                 "https://www.google.com/search?*",
-                "https://*.search.yahoo.com/search?p=*"
+                "https://*.search.yahoo.com/search?p=*",
+                "https://*.ask.com/web?q*"
             ],
+            "all_frames": true,
             "run_at": "document_idle",
             "js": ["content.js"],
             "css": ["content.css"]
@@ -24,6 +26,10 @@
         {
             "matches": ["https://www.bing.com/search?q=*"],
             "css": ["site_specific_css/bing.css"]
+        },
+        {
+            "matches": ["https://*.ask.com/web?q*"],
+            "css": ["site_specific_css/ask.css"]
         }
     ],
     "icons": {
