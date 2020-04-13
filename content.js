@@ -52,7 +52,7 @@ class Provider {
     hideResult(result) {
         const noteDiv = this.createResultHiddenElement(result);
         // TODO: messy
-        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "Ask.com") {
+        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "Ask.com" || this.name === "Yandex") {
             result.parentElement.insertBefore(noteDiv, result);
         }
         else {
@@ -145,6 +145,9 @@ let searchProvider = function () {
     else if (hostname.includes(".ask.com")) {
         return new Provider("Ask.com", "PartialSearchResults-item");
     }
+    else if (hostname.includes("yandex.ru")) {
+        return new Provider("Yandex", "serp-item");
+    }
     // else if (hostname.includes(".baidu.com")) {
     //     let p = new Provider("Baidu", "result c-container");
     //     p.getLinkFromResultElement = (result) => {
@@ -234,9 +237,11 @@ var observer = new MutationObserver(function(mutations) {
 });
 
 // TODO: only for Duck Duck Go?
-observer.observe(document.querySelector("div.results--main"), {
-    subtree: true,
-    childList: true
-});
+if (searchProvider.name === "Duck Duck Go") {
+    observer.observe(document.querySelector("div.results--main"), {
+        subtree: true,
+        childList: true
+    });
+}
 
 processSearchPage();

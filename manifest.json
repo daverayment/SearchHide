@@ -12,7 +12,8 @@
                 "https://www.bing.com/search?q=*",
                 "https://www.google.com/search?*",
                 "https://*.search.yahoo.com/search?p=*",
-                "https://*.ask.com/web?q*"
+                "https://*.ask.com/web?q*",
+                "https://yandex.ru/search/?*"
             ],
             "all_frames": true,
             "run_at": "document_idle",
@@ -30,6 +31,10 @@
         {
             "matches": ["https://*.ask.com/web?q*"],
             "css": ["site_specific_css/ask.css"]
+        },
+        {
+            "matches": ["https://yandex.ru/search/?*"],
+            "css": ["site_specific_css/yandex.css"]
         }
     ],
     "icons": {
