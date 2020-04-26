@@ -1,10 +1,19 @@
 "use strict";
 /* global chrome */
 
+/**
+ * How is the 'Result hidden' element added to the DOM. Varies by provider.
+ */
+const HiddenLinkPlacement = Object.freeze({
+    "Prepend": 1,
+    "InsertBefore": 2
+});
+
 class Provider {
-    constructor(name, resultClass) {
+    constructor(name, resultClass, hiddenLinkPlacement = HiddenLinkPlacement.Prepend) {
         this.name = name;
         this.resultClass = resultClass;
+        this.hideLinkPlacement = hiddenLinkPlacement;
     }
     /**
      * Returns an HTMLCollectionOf<Element> representing the individual search
@@ -51,8 +60,7 @@ class Provider {
      */
     hideResult(result) {
         const noteDiv = this.createResultHiddenElement(result);
-        // TODO: messy
-        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "Ask.com" || this.name === "Yandex") {
+        if (this.hiddenLinkPlacement === HiddenLinkPlacement.InsertBefore) {
             result.parentElement.insertBefore(noteDiv, result);
         }
         else {
@@ -79,11 +87,13 @@ class Provider {
      * @param {Event} ev - The mouse click event trigger.
      */
     unhideResult(ev) {
+        observer.disconnect();
         const resultElement = this.getResultFromHideLink(ev.target);
         resultElement.classList.remove("hidden");
         resultElement.classList.add("unhidden");
         ev.currentTarget.remove();
         ev.stopPropagation();
+        setupObserver();
     }
     /**
      * Add our 'Hide' link to a specific search result.
@@ -125,13 +135,13 @@ class Provider {
 let searchProvider = function () {
     const hostname = document.domain;
     if (hostname.startsWith("duckduckgo.")) {
-        return new Provider("Duck Duck Go", "result__body links_main");
+        return new Provider("Duck Duck Go", "result__body links_main", HiddenLinkPlacement.Prepend);
     }
     else if (hostname.includes(".bing.")) {
         return new Provider("Bing", "b_algo");
     }
     else if (hostname.includes(".google.")) {
-        return new Provider("Google", "rc");
+        return new Provider("Google", "rc", HiddenLinkPlacement.Prepend);
     }
     else if (hostname.includes("search.yahoo.com")) {
         let p = new Provider("Yahoo", "algo-sr");
@@ -147,6 +157,9 @@ let searchProvider = function () {
     }
     else if (hostname.includes("yandex.ru")) {
         return new Provider("Yandex", "serp-item");
+    }
+    else if (hostname.includes("searchencrypt.com")) {
+        return new Provider("SearchEncrypt", "web-result");
     }
     // else if (hostname.includes(".baidu.com")) {
     //     let p = new Provider("Baidu", "result c-container");
@@ -173,6 +186,7 @@ Object.freeze(searchProvider);
  * @param {*} hiddenSites - The array of site hostnames the user wants to hide.
  */
 function shouldHide(link, hiddenSites) {
+    if (hiddenSites === undefined || hiddenSites.length === 0) { return false; }
     return hiddenSites.includes(new URL(link).hostname);
 }
 
@@ -229,19 +243,33 @@ chrome.storage.onChanged.addListener((changes) => {
     processSearchPage();
 });
 
-var observer = new MutationObserver(function(mutations) {
+let observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
         console.log(mutation.type);
     });
     processSearchPage(); 
 });
 
-// TODO: only for Duck Duck Go?
-if (searchProvider.name === "Duck Duck Go") {
-    observer.observe(document.querySelector("div.results--main"), {
-        subtree: true,
-        childList: true
-    });
+/**
+ * For providers which load new results dynamically.
+ */
+async function setupObserver() {
+    if (searchProvider.name === "Duck Duck Go" || searchProvider.name === "SearchEncrypt") {
+        // DDG observation point
+        let query = "div.results--main";
+        if (searchProvider.name === "SearchEncrypt") {
+            query = "div#app";
+        }
+        while (document.querySelector(query) === null) {
+            await new Promise(r => setTimeout(r, 500));
+        }
+        observer.observe(document.querySelector(query), {
+            subtree: true,
+            childList: true
+        });
+        console.log(`Observer setup for ${searchProvider.name}`);
+    }
 }
 
+setupObserver();
 processSearchPage();
