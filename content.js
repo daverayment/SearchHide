@@ -13,7 +13,7 @@ class Provider {
     constructor(name, resultClass, hiddenLinkPlacement = HiddenLinkPlacement.Prepend) {
         this.name = name;
         this.resultClass = resultClass;
-        this.hideLinkPlacement = hiddenLinkPlacement;
+        this.hiddenLinkPlacement = hiddenLinkPlacement;
     }
     /**
      * Returns an HTMLCollectionOf<Element> representing the individual search
@@ -144,13 +144,7 @@ let searchProvider = function () {
         return new Provider("Google", "rc", HiddenLinkPlacement.Prepend);
     }
     else if (hostname.includes("search.yahoo.com")) {
-        let p = new Provider("Yahoo", "algo-sr");
-        p.getResultElements = () => {
-            return Array.from(document.querySelectorAll("div.algo-sr"))
-                .map(x => x.parentElement)
-                .filter(x => !x.classList.contains("hidden"));
-        }
-        return p;
+        return new Provider("Yahoo", "algo-sr");
     }
     else if (hostname.includes(".ask.com")) {
         return new Provider("Ask.com", "PartialSearchResults-item");
