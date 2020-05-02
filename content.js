@@ -2,7 +2,7 @@
 /* global chrome */
 
 /**
- * How is the 'Result hidden' element added to the DOM. Varies by provider.
+ * How the 'Result hidden' element is added to the DOM. Varies by provider.
  */
 const HiddenLinkPlacement = Object.freeze({
     "Prepend": 1,
@@ -135,7 +135,8 @@ class Provider {
 let searchProvider = function () {
     const hostname = document.domain;
     if (hostname.startsWith("duckduckgo.")) {
-        return new Provider("Duck Duck Go", "result__body links_main", HiddenLinkPlacement.Prepend);
+        return new Provider("Duck Duck Go", "result__body links_main",
+            HiddenLinkPlacement.Prepend);
     }
     else if (hostname.includes(".bing.")) {
         return new Provider("Bing", "b_algo");
@@ -248,7 +249,8 @@ let observer = new MutationObserver(function(mutations) {
  * For providers which load new results dynamically.
  */
 async function setupObserver() {
-    if (searchProvider.name === "Duck Duck Go" || searchProvider.name === "SearchEncrypt") {
+    if (searchProvider.name === "Duck Duck Go" ||
+        searchProvider.name === "SearchEncrypt") {
         // DDG observation point
         let query = "div.results--main";
         if (searchProvider.name === "SearchEncrypt") {
