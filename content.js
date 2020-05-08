@@ -9,11 +9,24 @@ const HiddenLinkPlacement = Object.freeze({
     "InsertBefore": 2
 });
 
+/**
+ * A search results provider.
+ */
 class Provider {
-    constructor(name, resultClass, hiddenLinkPlacement = HiddenLinkPlacement.Prepend) {
+    /**
+     * Provider constructor.
+     * @param {string} name Provider name.
+     * @param {string} resultClass Result elements' class.
+     * @param {HiddenLinkPlacement} hiddenLinkPlacement How to insert a new 'Result hidden' element for this provider.
+     * @param {boolean} dynamicPaging Whether new results are paged in dynamically.
+     * @param {string} dynamicResultsQuery The point at which to monitor for dynamic changes when new results are loaded in.
+     */
+    constructor(name, resultClass, hiddenLinkPlacement = HiddenLinkPlacement.Prepend, dynamicPaging = false, dynamicResultsQuery = "") {
         this.name = name;
         this.resultClass = resultClass;
         this.hiddenLinkPlacement = hiddenLinkPlacement;
+        this.dynamicPaging = dynamicPaging;
+        this.dynamicResultsQuery = dynamicResultsQuery;
     }
     /**
      * Returns an HTMLCollectionOf<Element> representing the individual search
@@ -46,7 +59,7 @@ class Provider {
      */
     getResultFromHideLink(linkElement) {
         let result = undefined;
-        if (this.name === "Bing" || this.name === "Yahoo") {
+        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "SearchEncrypt") {
             result = linkElement.nextElementSibling;
         }
         else {
@@ -136,7 +149,7 @@ let searchProvider = function () {
     const hostname = document.domain;
     if (hostname.startsWith("duckduckgo.")) {
         return new Provider("Duck Duck Go", "result__body links_main",
-            HiddenLinkPlacement.Prepend);
+            HiddenLinkPlacement.Prepend, true, "div.results--main");
     }
     else if (hostname.includes(".bing.")) {
         return new Provider("Bing", "b_algo");
@@ -154,7 +167,8 @@ let searchProvider = function () {
         return new Provider("Yandex", "serp-item");
     }
     else if (hostname.includes("searchencrypt.com")) {
-        return new Provider("SearchEncrypt", "web-result");
+        return new Provider("SearchEncrypt", "web-result",
+            HiddenLinkPlacement.InsertBefore, true, "div#app");
     }
     // else if (hostname.includes(".baidu.com")) {
     //     let p = new Provider("Baidu", "result c-container");
@@ -249,13 +263,8 @@ let observer = new MutationObserver(function(mutations) {
  * For providers which load new results dynamically.
  */
 async function setupObserver() {
-    if (searchProvider.name === "Duck Duck Go" ||
-        searchProvider.name === "SearchEncrypt") {
-        // DDG observation point
-        let query = "div.results--main";
-        if (searchProvider.name === "SearchEncrypt") {
-            query = "div#app";
-        }
+    if (searchProvider.dynamicPaging) {
+        let query = searchProvider.dynamicResultsQuery;
         while (document.querySelector(query) === null) {
             await new Promise(r => setTimeout(r, 500));
         }
