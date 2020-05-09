@@ -59,7 +59,7 @@ class Provider {
      */
     getResultFromHideLink(linkElement) {
         let result = undefined;
-        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "SearchEncrypt") {
+        if (this.name === "Bing" || this.name === "Yahoo" || this.name === "SearchEncrypt" || this.name === "Dogpile") {
             result = linkElement.nextElementSibling;
         }
         else {
@@ -152,10 +152,10 @@ let searchProvider = function () {
             HiddenLinkPlacement.Prepend, true, "div.results--main");
     }
     else if (hostname.includes(".bing.")) {
-        return new Provider("Bing", "b_algo");
+        return new Provider("Bing", "b_algo", HiddenLinkPlacement.InsertBefore);
     }
     else if (hostname.includes(".google.")) {
-        return new Provider("Google", "rc", HiddenLinkPlacement.Prepend);
+        return new Provider("Google", "rc");
     }
     else if (hostname.includes("search.yahoo.com")) {
         return new Provider("Yahoo", "algo-sr");
@@ -169,6 +169,10 @@ let searchProvider = function () {
     else if (hostname.includes("searchencrypt.com")) {
         return new Provider("SearchEncrypt", "web-result",
             HiddenLinkPlacement.InsertBefore, true, "div#app");
+    }
+    else if (hostname.includes("dogpile.com")) {
+        return new Provider("Dogpile", "web-bing__result",
+            HiddenLinkPlacement.InsertBefore);
     }
     // else if (hostname.includes(".baidu.com")) {
     //     let p = new Provider("Baidu", "result c-container");
